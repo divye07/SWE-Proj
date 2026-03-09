@@ -1,0 +1,2402 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>YouTube Summarizer</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        /* ══════ THEME VARIABLES ══════ */
+        [data-theme="dark"] {
+            --bg: #0a0a0f;
+            --bg2: #12121a;
+            --bg3: #1a1a2e;
+            --bg4: #22223a;
+            --accent: #7c6ef0;
+            --accent2: #9b8fff;
+            --accent-light: rgba(124,110,240,0.15);
+            --accent-glow: rgba(124,110,240,0.4);
+            --green: #6ee7a0;
+            --green-bg: rgba(110,231,160,0.1);
+            --text: #e8e6f0;
+            --text2: #8a87a8;
+            --text3: #5a577a;
+            --border: #2a2a42;
+            --border2: #33335a;
+            --red: #f87171;
+            --shadow: 0 4px 24px rgba(0,0,0,0.4);
+            --glass: rgba(18,18,26,0.85);
+            --landing-gradient: radial-gradient(ellipse at 50% 0%, rgba(124,110,240,0.15) 0%, transparent 60%);
+        }
+        [data-theme="light"] {
+            --bg: #f8f7ff;
+            --bg2: #ffffff;
+            --bg3: #f0eeff;
+            --bg4: #e8e6f7;
+            --accent: #7c6ef0;
+            --accent2: #9b8fff;
+            --accent-light: #ede9fe;
+            --accent-glow: rgba(124,110,240,0.3);
+            --green: #6ee7a0;
+            --green-bg: #ecfdf5;
+            --text: #1e1b3a;
+            --text2: #6b6894;
+            --text3: #9b98b8;
+            --border: #e4e0f7;
+            --border2: #d4d0e7;
+            --red: #f87171;
+            --shadow: 0 2px 16px rgba(124,110,240,0.08);
+            --glass: rgba(255,255,255,0.85);
+            --landing-gradient: radial-gradient(ellipse at 50% 0%, rgba(124,110,240,0.1) 0%, transparent 60%);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            transition: background 0.4s, color 0.4s;
+        }
+
+        /* ══════ LANDING PAGE ══════ */
+        .landing-page {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            background: var(--bg);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        .landing-page.hide {
+            opacity: 0;
+            transform: scale(0.96);
+            pointer-events: none;
+        }
+        .landing-page::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: var(--landing-gradient);
+            pointer-events: none;
+        }
+
+        /* Animated grid background */
+        .landing-bg {
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(var(--border) 1px, transparent 1px),
+                linear-gradient(90deg, var(--border) 1px, transparent 1px);
+            background-size: 60px 60px;
+            opacity: 0.3;
+            mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, black 30%, transparent 100%);
+            -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, black 30%, transparent 100%);
+        }
+
+        /* Floating orbs */
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.4;
+            animation: float 8s ease-in-out infinite;
+        }
+        .orb-1 {
+            width: 300px; height: 300px;
+            background: var(--accent);
+            top: 10%; left: 15%;
+            animation-delay: 0s;
+        }
+        .orb-2 {
+            width: 250px; height: 250px;
+            background: #ec4899;
+            bottom: 15%; right: 15%;
+            animation-delay: -3s;
+        }
+        .orb-3 {
+            width: 200px; height: 200px;
+            background: #06b6d4;
+            top: 60%; left: 60%;
+            animation-delay: -5s;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-30px) scale(1.05); }
+        }
+
+        /* Landing content */
+        .landing-content {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            max-width: 700px;
+            padding: 0 24px;
+        }
+        .landing-icon {
+            width: 80px; height: 80px;
+            margin: 0 auto 24px;
+            background: linear-gradient(135deg, var(--accent), #ec4899);
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 32px var(--accent-glow);
+            animation: pulse-icon 3s ease-in-out infinite;
+        }
+        @keyframes pulse-icon {
+            0%, 100% { box-shadow: 0 8px 32px var(--accent-glow); }
+            50% { box-shadow: 0 12px 48px var(--accent-glow), 0 0 80px rgba(124,110,240,0.15); }
+        }
+        .landing-icon svg { width: 40px; height: 40px; color: #fff; }
+        .landing-title {
+            font-size: 48px;
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, var(--text) 0%, var(--accent) 50%, #ec4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .landing-subtitle {
+            font-size: 18px;
+            color: var(--text2);
+            line-height: 1.6;
+            margin-bottom: 40px;
+        }
+        .landing-subtitle span {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        /* Landing URL bar */
+        .landing-url-bar {
+            display: flex;
+            gap: 10px;
+            background: var(--bg2);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 8px 10px 8px 18px;
+            align-items: center;
+            transition: all 0.3s;
+            backdrop-filter: blur(12px);
+            max-width: 620px;
+            margin: 0 auto;
+        }
+        .landing-url-bar:focus-within {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px var(--accent-light), 0 8px 32px rgba(124,110,240,0.15);
+        }
+        .landing-url-bar input {
+            flex: 1;
+            background: none;
+            border: none;
+            color: var(--text);
+            font-size: 16px;
+            outline: none;
+            padding: 12px 4px;
+            font-family: inherit;
+        }
+        .landing-url-bar input::placeholder { color: var(--text3); }
+
+        .clipboard-btn {
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            color: var(--text2);
+            border-radius: 10px;
+            padding: 10px 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-family: inherit;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        .clipboard-btn:hover {
+            background: var(--accent-light);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        .clipboard-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+        .summarize-btn {
+            background: linear-gradient(135deg, var(--accent), #ec4899);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 28px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+            font-family: inherit;
+            letter-spacing: 0.3px;
+        }
+        .summarize-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px var(--accent-glow);
+        }
+        .summarize-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .landing-features {
+            display: flex;
+            gap: 32px;
+            justify-content: center;
+            margin-top: 48px;
+            flex-wrap: wrap;
+        }
+        .landing-feature {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text2);
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .landing-feature svg { width: 18px; height: 18px; color: var(--accent); flex-shrink: 0; }
+
+        /* ══════ PROCESSING SCREEN (overlay on landing) ══════ */
+        .processing-screen {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg);
+            transition: opacity 0.4s;
+        }
+        .processing-screen.active { display: flex; }
+
+        .processing-card {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 48px 56px;
+            text-align: center;
+            max-width: 520px;
+            width: 90%;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+        .processing-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent), #ec4899, var(--accent));
+            background-size: 200% 100%;
+            animation: shimmer 2s linear infinite;
+        }
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        .processing-ring {
+            width: 80px; height: 80px;
+            margin: 0 auto 28px;
+            position: relative;
+        }
+        .processing-ring svg {
+            width: 80px; height: 80px;
+            animation: spin 1.5s linear infinite;
+        }
+        .processing-ring .ring-track { stroke: var(--border); }
+        .processing-ring .ring-fill { stroke: var(--accent); stroke-dasharray: 200; stroke-dashoffset: 140; stroke-linecap: round; }
+
+        .processing-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+        .processing-step {
+            color: var(--text2);
+            font-size: 14px;
+            margin-bottom: 24px;
+            min-height: 20px;
+        }
+
+        .processing-progress-bar {
+            width: 100%;
+            height: 6px;
+            background: var(--bg3);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+        .processing-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), #ec4899);
+            border-radius: 8px;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        .processing-percent {
+            color: var(--text3);
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        /* ══════ HEADER (main app) ══════ */
+        .header {
+            background: var(--bg2);
+            border-bottom: 1px solid var(--border);
+            padding: 14px 32px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            box-shadow: 0 1px 8px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            backdrop-filter: blur(12px);
+        }
+        .header .logo {
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            color: var(--accent);
+            text-transform: uppercase;
+            flex-shrink: 0;
+        }
+        .header-spacer { flex: 1; }
+
+        /* Theme Toggle */
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .theme-toggle-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text2);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .theme-toggle-track {
+            width: 48px;
+            height: 26px;
+            background: var(--bg3);
+            border: 2px solid var(--border);
+            border-radius: 13px;
+            position: relative;
+            transition: all 0.3s;
+        }
+        .theme-toggle-track::after {
+            content: '';
+            position: absolute;
+            width: 18px; height: 18px;
+            background: var(--accent);
+            border-radius: 50%;
+            top: 2px; left: 2px;
+            transition: all 0.3s;
+            box-shadow: 0 2px 6px rgba(124,110,240,0.4);
+        }
+        [data-theme="light"] .theme-toggle-track::after {
+            left: 24px;
+            background: #f59e0b;
+            box-shadow: 0 2px 6px rgba(245,158,11,0.4);
+        }
+        .theme-toggle-icon {
+            width: 18px; height: 18px;
+            color: var(--text2);
+        }
+
+        /* Landing theme toggle (absolute positioned) */
+        .landing-theme-toggle {
+            position: absolute;
+            top: 24px;
+            right: 32px;
+            z-index: 20;
+        }
+
+        /* ── URL Input (in header for main view) ── */
+        .header-url-bar {
+            display: flex;
+            gap: 8px;
+            background: var(--bg3);
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
+            padding: 4px 6px 4px 14px;
+            align-items: center;
+            transition: all 0.3s;
+            max-width: 460px;
+            flex: 1;
+        }
+        .header-url-bar:focus-within {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-light);
+        }
+        .header-url-bar input {
+            flex: 1;
+            background: none;
+            border: none;
+            color: var(--text);
+            font-size: 14px;
+            outline: none;
+            padding: 8px 4px;
+            font-family: inherit;
+            min-width: 0;
+        }
+        .header-url-bar input::placeholder { color: var(--text3); }
+        .header-url-bar .clipboard-btn {
+            padding: 7px 8px;
+            font-size: 0;
+            border-radius: 8px;
+        }
+        .header-url-bar .summarize-btn {
+            padding: 8px 18px;
+            font-size: 13px;
+            border-radius: 8px;
+        }
+
+        /* ── Spinner ── */
+        .spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Main Content ── */
+        .main-content {
+            max-width: 1280px;
+            margin: 24px auto 0;
+            padding: 0 24px 48px;
+            display: none;
+            gap: 24px;
+            animation: fadeInUp 0.6s ease;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── Video Info ── */
+        .video-panel {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: var(--shadow);
+        }
+        .video-embed {
+            flex: 0 0 400px;
+            border-radius: 12px;
+            overflow: hidden;
+            aspect-ratio: 16/9;
+        }
+        .video-embed iframe { width: 100%; height: 100%; border: none; }
+        .video-meta { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+        .video-meta h2 { font-size: 17px; font-weight: 700; line-height: 1.4; color: var(--text); }
+        .video-meta .channel { color: var(--accent); font-size: 14px; font-weight: 600; }
+        .video-meta .stats { color: var(--text2); font-size: 13px; display: flex; gap: 16px; }
+        .video-meta .description { color: var(--text2); font-size: 13px; line-height: 1.5; margin-top: 6px; max-height: 80px; overflow-y: auto; }
+
+        /* ── Tabs ── */
+        .tabs-section { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+        .tab-panel {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+        .tab-header {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+            overflow-x: auto;
+            background: var(--bg3);
+        }
+        .tab-btn {
+            padding: 11px 16px;
+            background: none;
+            border: none;
+            color: var(--text2);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            white-space: nowrap;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .tab-btn:hover { color: var(--text); background: rgba(124,110,240,0.06); }
+        .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); background: var(--bg2); }
+        .tab-content {
+            padding: 20px;
+            max-height: 520px;
+            overflow-y: auto;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+        .tab-content::-webkit-scrollbar { width: 5px; }
+        .tab-content::-webkit-scrollbar-track { background: transparent; }
+        .tab-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+        /* ── Markdown rendering ── */
+        .md-content h1, .md-content h2, .md-content h3 {
+            margin: 16px 0 8px;
+            font-weight: 600;
+        }
+        .md-content h1 { font-size: 19px; color: var(--text); }
+        .md-content h2 { font-size: 16px; color: var(--accent); }
+        .md-content h3 { font-size: 14px; color: var(--text); }
+        .md-content p { margin: 8px 0; }
+        .md-content ul, .md-content ol {
+            margin: 8px 0;
+            padding-left: 24px;
+        }
+        .md-content li { margin: 4px 0; }
+        .md-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0;
+        }
+        .md-content th, .md-content td {
+            border: 1px solid var(--border);
+            padding: 8px 12px;
+            text-align: left;
+            font-size: 13px;
+        }
+        .md-content th {
+            background: var(--bg3);
+            font-weight: 600;
+        }
+        .md-content strong { color: var(--text); font-weight: 700; }
+        .md-content code {
+            background: var(--bg3);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        .md-content blockquote {
+            border-left: 3px solid var(--accent);
+            padding-left: 12px;
+            color: var(--text2);
+            margin: 8px 0;
+        }
+
+        /* ── Chat Panel ── */
+        .chat-panel {
+            grid-column: 1 / -1;
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+        .chat-header {
+            padding: 14px 20px;
+            font-weight: 700;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg3);
+            color: var(--text);
+        }
+        .chat-messages {
+            height: 300px;
+            overflow-y: auto;
+            padding: 16px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: var(--bg);
+        }
+        .chat-messages::-webkit-scrollbar { width: 5px; }
+        .chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+        .msg {
+            max-width: 80%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .msg.user {
+            background: var(--accent);
+            color: #fff;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+        .msg.assistant {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+            color: var(--text);
+        }
+        .msg.assistant .md-content { font-size: 14px; }
+
+        .chat-input-bar {
+            display: flex;
+            gap: 10px;
+            padding: 12px 20px;
+            border-top: 1px solid var(--border);
+            background: var(--bg2);
+        }
+        .chat-input-bar input {
+            flex: 1;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: var(--text);
+            font-size: 14px;
+            outline: none;
+            font-family: inherit;
+        }
+        .chat-input-bar input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
+        .chat-input-bar button {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 22px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .chat-input-bar button:hover { background: var(--accent2); }
+
+        /* ── Quick Actions ── */
+        .quick-actions { display: flex; gap: 8px; flex-wrap: wrap; padding: 10px 20px 4px; }
+        .quick-btn {
+            background: var(--accent-light);
+            border: 1px solid var(--border);
+            color: var(--accent);
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .quick-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+        /* ── Toolbar ── */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        .tool-btn {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--text2);
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s;
+            font-family: inherit;
+            font-weight: 500;
+        }
+        .tool-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+
+        /* ── Responsive ── */
+        @media (max-width: 900px) {
+            .tabs-section { grid-template-columns: 1fr; }
+            .video-panel { flex-direction: column; }
+            .video-embed { flex: none; width: 100%; }
+        }
+
+        /* ── Toast ── */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--accent);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s;
+            z-index: 1000;
+            box-shadow: 0 4px 16px rgba(124,110,240,0.3);
+        }
+        .toast.show { opacity: 1; transform: translateY(0); }
+
+        /* ── Loading placeholder ── */
+        .placeholder {
+            color: var(--text2);
+            text-align: center;
+            padding: 40px 20px;
+            font-size: 14px;
+        }
+
+        /* ── Transcript formatted ── */
+        .transcript-text {
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        /* ── Timestamp markers ── */
+        .timestamp-marker {
+            display: inline-block;
+            background: var(--accent);
+            color: #fff;
+            padding: 2px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            margin: 12px 4px 6px 0;
+            transition: all 0.2s;
+            letter-spacing: 0.5px;
+        }
+        .timestamp-marker:hover {
+            background: var(--accent2);
+            transform: scale(1.05);
+            box-shadow: 0 2px 10px rgba(124,110,240,0.25);
+        }
+
+        /* ── Enhanced buttons ── */
+        .tool-btn.pdf-btn {
+            background: linear-gradient(135deg, #f87171, #fb923c);
+            color: #fff;
+            border: none;
+            font-weight: 600;
+        }
+        .tool-btn.pdf-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+
+        /* ── Responsive ── */
+        @media (max-width: 900px) {
+            .tabs-section { grid-template-columns: 1fr; }
+            .video-panel { flex-direction: column; }
+            .video-embed { flex: none; width: 100%; }
+            .landing-title { font-size: 32px; }
+            .landing-subtitle { font-size: 15px; }
+            .landing-features { gap: 16px; }
+            .header-url-bar { max-width: 320px; }
+        }
+        @media (max-width: 600px) {
+            .landing-url-bar { flex-wrap: wrap; }
+            .landing-url-bar .summarize-btn { width: 100%; }
+            .landing-features { flex-direction: column; align-items: center; }
+        }
+
+        /* ══════ WATCH VIEW (Video + Synced Transcript) ══════ */
+        .watch-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 200;
+            background: var(--bg);
+            display: none;
+            flex-direction: column;
+            animation: fadeInUp 0.4s ease;
+        }
+        .watch-overlay.active { display: flex; }
+
+        .watch-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 24px;
+            background: var(--bg2);
+            border-bottom: 1px solid var(--border);
+        }
+        .watch-back-btn {
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 10px;
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .watch-back-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .watch-title {
+            flex: 1;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .watch-body {
+            display: grid;
+            grid-template-columns: 1.4fr 1fr;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .watch-video-side {
+            display: flex;
+            flex-direction: column;
+            background: #000;
+        }
+        .watch-player-container {
+            width: 100%;
+            aspect-ratio: 16/9;
+            max-height: 70vh;
+        }
+        .watch-player-container iframe { width: 100%; height: 100%; border: none; }
+
+        /* Watch Progress Bar */
+        .watch-progress-section {
+            padding: 16px 24px;
+            background: var(--bg2);
+            border-top: 1px solid var(--border);
+        }
+        .watch-progress-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .watch-progress-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text2);
+        }
+        .watch-progress-pct {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--accent);
+        }
+        .watch-progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--bg3);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .watch-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), #ec4899);
+            border-radius: 8px;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        .watch-time-info {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 6px;
+            font-size: 12px;
+            color: var(--text3);
+        }
+
+        /* Synced Transcript Side */
+        .watch-transcript-side {
+            display: flex;
+            flex-direction: column;
+            background: var(--bg2);
+            border-left: 1px solid var(--border);
+        }
+        .watch-transcript-header {
+            padding: 14px 20px;
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--text);
+            border-bottom: 1px solid var(--border);
+            background: var(--bg3);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .watch-transcript-header .sync-dot {
+            width: 8px; height: 8px;
+            background: var(--green);
+            border-radius: 50%;
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        .watch-transcript-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 0;
+        }
+        .watch-transcript-list::-webkit-scrollbar { width: 5px; }
+        .watch-transcript-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+        .transcript-segment {
+            display: flex;
+            gap: 12px;
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+        .transcript-segment:hover {
+            background: var(--accent-light);
+        }
+        .transcript-segment.active {
+            background: var(--accent-light);
+            border-left-color: var(--accent);
+        }
+        .transcript-segment.watched {
+            opacity: 0.6;
+        }
+        .transcript-segment.active.watched {
+            opacity: 1;
+        }
+        .segment-time {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--accent);
+            min-width: 45px;
+            padding-top: 2px;
+            font-variant-numeric: tabular-nums;
+        }
+        .segment-text {
+            font-size: 13px;
+            line-height: 1.6;
+            color: var(--text);
+        }
+
+        /* ══════ HISTORY PANEL ══════ */
+        .history-btn {
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            color: var(--text2);
+            border-radius: 10px;
+            padding: 8px 14px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .history-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .history-btn svg { width: 16px; height: 16px; }
+
+        .history-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 300;
+            display: none;
+            animation: fadeInUp 0.3s ease;
+        }
+        .history-overlay.active { display: flex; }
+        .history-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+        }
+        .history-panel {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 420px;
+            max-width: 90vw;
+            background: var(--bg2);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            box-shadow: -4px 0 24px rgba(0,0,0,0.3);
+            z-index: 1;
+        }
+        .history-panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 20px;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg3);
+        }
+        .history-panel-header h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text);
+        }
+        .history-close-btn {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--text2);
+            border-radius: 8px;
+            padding: 6px 10px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+        .history-close-btn:hover { border-color: var(--red); color: var(--red); }
+        .history-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+        }
+        .history-list::-webkit-scrollbar { width: 5px; }
+        .history-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+        .history-empty {
+            text-align: center;
+            color: var(--text3);
+            padding: 48px 20px;
+            font-size: 14px;
+        }
+        .history-empty svg { width: 48px; height: 48px; color: var(--text3); margin-bottom: 12px; opacity: 0.5; }
+
+        .history-item {
+            display: flex;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+            margin-bottom: 8px;
+        }
+        .history-item:hover {
+            background: var(--accent-light);
+            border-color: var(--border);
+        }
+        .history-thumb {
+            width: 120px;
+            height: 68px;
+            border-radius: 8px;
+            object-fit: cover;
+            flex-shrink: 0;
+            background: var(--bg3);
+        }
+        .history-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 0;
+        }
+        .history-info .h-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text);
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .history-info .h-channel {
+            font-size: 12px;
+            color: var(--accent);
+            font-weight: 500;
+        }
+        .history-info .h-date {
+            font-size: 11px;
+            color: var(--text3);
+        }
+        .history-progress-mini {
+            width: 100%;
+            height: 4px;
+            background: var(--bg3);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+        .history-progress-mini-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), #ec4899);
+            border-radius: 4px;
+        }
+        .history-pct {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--green);
+        }
+        .history-clear-btn {
+            margin: 12px;
+            padding: 10px;
+            background: rgba(248,113,113,0.1);
+            border: 1px solid rgba(248,113,113,0.3);
+            color: var(--red);
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+        .history-clear-btn:hover { background: rgba(248,113,113,0.2); }
+
+        /* Watch button in video panel */
+        .watch-btn {
+            background: linear-gradient(135deg, var(--accent), #ec4899);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            font-family: inherit;
+            margin-top: 8px;
+        }
+        .watch-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 16px var(--accent-glow); }
+        .watch-btn svg { width: 18px; height: 18px; }
+
+        /* ══════ LANDING HISTORY SECTION ══════ */
+        .landing-history {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 700px;
+            margin-top: 48px;
+            padding: 0 24px;
+        }
+        .landing-history-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        .landing-history-header h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text2);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .landing-history-header h3 svg { width: 18px; height: 18px; color: var(--accent); }
+        .landing-history-header .clear-link {
+            font-size: 12px;
+            color: var(--text3);
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-family: inherit;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        .landing-history-header .clear-link:hover { color: var(--red); }
+
+        .landing-history-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+        }
+        .landing-history-card {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.25s;
+        }
+        .landing-history-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(124,110,240,0.15);
+        }
+        .landing-history-card .card-thumb-wrap {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: var(--bg3);
+            overflow: hidden;
+        }
+        .landing-history-card .card-thumb {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+        .landing-history-card .card-pct-badge {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            background: rgba(0,0,0,0.75);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 6px;
+            backdrop-filter: blur(4px);
+        }
+        .landing-history-card .card-progress {
+            height: 3px;
+            background: var(--bg3);
+        }
+        .landing-history-card .card-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), #ec4899);
+        }
+        .landing-history-card .card-info {
+            padding: 10px 12px;
+        }
+        .landing-history-card .card-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text);
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            margin-bottom: 4px;
+        }
+        .landing-history-card .card-meta {
+            font-size: 11px;
+            color: var(--text3);
+            display: flex;
+            justify-content: space-between;
+        }
+        .landing-history-card .card-channel {
+            color: var(--accent);
+            font-weight: 500;
+        }
+
+        @media (max-width: 900px) {
+            .watch-body { grid-template-columns: 1fr; }
+            .watch-transcript-side { max-height: 40vh; }
+            .history-panel { width: 100%; }
+            .landing-history-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ══════════ LANDING PAGE ══════════ -->
+<div class="landing-page" id="landingPage">
+    <div class="landing-bg"></div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
+    <!-- Theme toggle on landing -->
+    <div class="landing-theme-toggle">
+        <div class="theme-toggle" onclick="toggleTheme()">
+            <svg class="theme-toggle-icon" id="themeIconLanding" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+            </svg>
+            <div class="theme-toggle-track"></div>
+        </div>
+    </div>
+
+    <div class="landing-content">
+        <div class="landing-icon">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        </div>
+        <h1 class="landing-title">YouTube Summarizer</h1>
+        <p class="landing-subtitle">
+            Drop any YouTube link and get <span>AI-powered summaries</span>, chapters, mind maps, notes & chat with your video — all in seconds.
+        </p>
+
+        <div class="landing-url-bar">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color:var(--text3);flex-shrink:0"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+            <input type="text" id="urlInput" placeholder="Paste a YouTube URL..." />
+            <button class="clipboard-btn" onclick="pasteFromClipboard()" title="Paste from clipboard">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+                Paste
+            </button>
+            <button class="summarize-btn" id="processBtn" onclick="processVideo()">Summarize</button>
+        </div>
+
+        <div class="landing-features">
+            <div class="landing-feature">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                Instant Transcripts
+            </div>
+            <div class="landing-feature">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                AI Chat with Video
+            </div>
+            <div class="landing-feature">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                Export PDF & Notes
+            </div>
+        </div>
+
+        <!-- Landing History -->
+        <div class="landing-history" id="landingHistory" style="display:none">
+            <div class="landing-history-header">
+                <h3>
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    Recently Watched
+                </h3>
+                <button class="clear-link" onclick="clearHistory();renderLandingHistory()">Clear</button>
+            </div>
+            <div class="landing-history-grid" id="landingHistoryGrid"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════ PROCESSING SCREEN ══════════ -->
+<div class="processing-screen" id="processingScreen">
+    <div class="processing-card">
+        <div class="processing-ring">
+            <svg viewBox="0 0 80 80">
+                <circle class="ring-track" cx="40" cy="40" r="32" fill="none" stroke-width="5"/>
+                <circle class="ring-fill" cx="40" cy="40" r="32" fill="none" stroke-width="5"/>
+            </svg>
+        </div>
+        <div class="processing-title">Processing Video</div>
+        <div class="processing-step" id="processingStep">Initializing...</div>
+        <div class="processing-progress-bar">
+            <div class="processing-progress-fill" id="processingBar"></div>
+        </div>
+        <div class="processing-percent" id="processingPercent">0%</div>
+    </div>
+</div>
+
+<!-- ══════════ MAIN APP ══════════ -->
+<div class="app-view" id="appView" style="display:none;">
+
+<!-- Header -->
+<header class="header">
+    <span class="logo">YT Summarizer</span>
+    <div class="header-url-bar">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color:var(--text3);flex-shrink:0"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+        <input type="text" id="urlInputHeader" placeholder="New YouTube URL..." onkeydown="if(event.key==='Enter'){document.getElementById('urlInput').value=this.value;processVideo()}" />
+        <button class="clipboard-btn" onclick="pasteFromClipboardHeader()" title="Paste from clipboard">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+        </button>
+        <button class="summarize-btn" onclick="document.getElementById('urlInput').value=document.getElementById('urlInputHeader').value;processVideo()">Go</button>
+    </div>
+    <div class="header-spacer"></div>
+    <button class="history-btn" onclick="goHome()">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Home
+    </button>
+    <button class="history-btn" onclick="toggleHistory()">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        History
+    </button>
+    <div class="theme-toggle" onclick="toggleTheme()">
+        <svg class="theme-toggle-icon" id="themeIconHeader" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+        </svg>
+        <div class="theme-toggle-track"></div>
+    </div>
+</header>
+
+<section class="main-content" id="mainContent" style="display:block;">
+
+    <!-- Video Info Panel -->
+    <div class="video-panel" id="videoPanel" style="display:none;">
+        <div class="video-embed">
+            <iframe id="videoEmbed" src="" allowfullscreen></iframe>
+        </div>
+        <div class="video-meta">
+            <h2 id="videoTitle"></h2>
+            <span class="channel" id="videoChannel"></span>
+            <div class="stats">
+                <span id="videoDuration"></span>
+                <span id="videoViews"></span>
+            </div>
+            <div class="description" id="videoDesc"></div>
+            <button class="watch-btn" onclick="openWatchView()">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                Watch with Synced Transcript
+            </button>
+        </div>
+    </div>
+
+    <!-- Tabs Grid -->
+    <div class="tabs-section">
+
+        <!-- LEFT: Summary / Chapters / Concepts -->
+        <div class="tab-panel">
+            <div class="tab-header">
+                <button class="tab-btn active" onclick="switchTab('left', 'summary', this)">Summary</button>
+                <button class="tab-btn" onclick="switchTab('left', 'chapters', this)">Chapters</button>
+                <button class="tab-btn" onclick="switchTab('left', 'concepts', this)">Key Concepts</button>
+                <button class="tab-btn" onclick="switchTab('left', 'mindmap', this)">Mind Map</button>
+                <button class="tab-btn" onclick="switchTab('left', 'notes', this)">Notes</button>
+            </div>
+            <div class="toolbar">
+                <button class="tool-btn" onclick="copyContent('left')">Copy</button>
+                <button class="tool-btn" onclick="downloadContent('left')">Download</button>
+                <button class="tool-btn" onclick="regenerateFeature()">Regenerate</button>
+                <button class="tool-btn pdf-btn" onclick="exportPDF('left')">Export PDF</button>
+            </div>
+            <div class="tab-content md-content" id="leftContent">
+                <div class="placeholder">Process a video to see the summary</div>
+            </div>
+        </div>
+
+        <!-- RIGHT: Transcript -->
+        <div class="tab-panel">
+            <div class="tab-header">
+                <button class="tab-btn active" onclick="switchTab('right', 'transcript', this)">Transcript</button>
+            </div>
+            <div class="toolbar">
+                <button class="tool-btn" onclick="copyContent('right')">Copy</button>
+                <button class="tool-btn" onclick="downloadContent('right')">Download</button>
+                <button class="tool-btn pdf-btn" onclick="exportPDF('right')">Export PDF</button>
+            </div>
+            <div class="tab-content" id="rightContent">
+                <div class="placeholder">Transcript will appear here</div>
+            </div>
+        </div>
+
+        <!-- CHAT (full width) -->
+        <div class="chat-panel">
+            <div class="chat-header">
+                AI Chat
+            </div>
+            <div class="quick-actions" id="quickActions">
+                <button class="quick-btn" onclick="askQuick('Summarize the main points of this video in bullet points')">Main points?</button>
+                <button class="quick-btn" onclick="askQuick('Who are the key people or entities mentioned and what role do they play?')">Key people?</button>
+                <button class="quick-btn" onclick="askQuick('What are the final conclusions or takeaways from this video?')">Conclusions?</button>
+                <button class="quick-btn" onclick="askQuick('List specific examples, demos, or case studies mentioned in the video')">Examples?</button>
+                <button class="quick-btn" onclick="askQuick('Explain the core topic of this video in very simple terms, like I am 10 years old')">Simplify</button>
+                <button class="quick-btn" onclick="askQuick('What are the steps or process described in this video?')">Steps?</button>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="msg assistant">
+                    <div class="md-content">Process a video first, then ask me anything about it.</div>
+                </div>
+            </div>
+            <div class="chat-input-bar">
+                <input type="text" id="chatInput" placeholder="Ask a question about the video..." onkeydown="if(event.key==='Enter')sendChat()" />
+                <button onclick="sendChat()">Send</button>
+            </div>
+        </div>
+
+    </div>
+</section>
+</div> <!-- end app-view -->
+
+<!-- ══════════ WATCH VIEW (Video + Synced Transcript) ══════════ -->
+<div class="watch-overlay" id="watchOverlay">
+    <div class="watch-header">
+        <button class="watch-back-btn" onclick="closeWatchView()">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5m7-7l-7 7 7 7"/></svg>
+            Back
+        </button>
+        <div class="watch-title" id="watchTitle"></div>
+    </div>
+    <div class="watch-body">
+        <div class="watch-video-side">
+            <div class="watch-player-container">
+                <div id="watchPlayer"></div>
+            </div>
+            <div class="watch-progress-section">
+                <div class="watch-progress-info">
+                    <span class="watch-progress-label">Watch Progress</span>
+                    <span class="watch-progress-pct" id="watchProgressPct">0%</span>
+                </div>
+                <div class="watch-progress-bar">
+                    <div class="watch-progress-fill" id="watchProgressFill"></div>
+                </div>
+                <div class="watch-time-info">
+                    <span id="watchCurrentTime">0:00</span>
+                    <span id="watchTotalTime">0:00</span>
+                </div>
+            </div>
+        </div>
+        <div class="watch-transcript-side">
+            <div class="watch-transcript-header">
+                <div class="sync-dot"></div>
+                Live Synced Transcript
+            </div>
+            <div class="watch-transcript-list" id="watchTranscriptList">
+                <div class="placeholder">Loading transcript segments...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════ HISTORY PANEL ══════════ -->
+<div class="history-overlay" id="historyOverlay">
+    <div class="history-backdrop" onclick="toggleHistory()"></div>
+    <div class="history-panel">
+        <div class="history-panel-header">
+            <h3>Watch History</h3>
+            <button class="history-close-btn" onclick="toggleHistory()">Close</button>
+        </div>
+        <div class="history-list" id="historyList">
+            <div class="history-empty">
+                <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <div>No watch history yet</div>
+                <div style="margin-top:4px;font-size:12px">Videos you watch will appear here</div>
+            </div>
+        </div>
+        <button class="history-clear-btn" onclick="clearHistory()">Clear All History</button>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── State ───────────────────────────────────────────────────────────────────
+let currentVideoId = null;
+let currentLeftTab = 'summary';
+let contentCache = {
+    summary: '', chapters: '', concepts: '', mindmap: '', notes: '', transcript: ''
+};
+let rawContentCache = { ...contentCache };
+
+// ─── Theme ───────────────────────────────────────────────────────────────────
+function toggleTheme() {
+    const html = document.documentElement;
+    const current = html.getAttribute('data-theme');
+    const next = current === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
+    updateThemeIcons(next);
+}
+
+function updateThemeIcons(theme) {
+    const moonPath = 'M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z';
+    const sunPath = 'M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42';
+    const icons = [document.getElementById('themeIconLanding'), document.getElementById('themeIconHeader')];
+    icons.forEach(icon => {
+        if (!icon) return;
+        if (theme === 'light') {
+            icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="' + sunPath + '"/>';
+        } else {
+            icon.innerHTML = '<path d="' + moonPath + '"/>';
+        }
+    });
+}
+
+// Load saved theme
+(function() {
+    const saved = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', saved);
+    updateThemeIcons(saved);
+})();
+
+// ─── Clipboard Paste ─────────────────────────────────────────────────────────
+async function pasteFromClipboard() {
+    try {
+        const text = await navigator.clipboard.readText();
+        if (text) {
+            document.getElementById('urlInput').value = text;
+            showToast('Pasted from clipboard!');
+        }
+    } catch {
+        showToast('Clipboard access denied');
+    }
+}
+
+async function pasteFromClipboardHeader() {
+    try {
+        const text = await navigator.clipboard.readText();
+        if (text) {
+            document.getElementById('urlInputHeader').value = text;
+            showToast('Pasted from clipboard!');
+        }
+    } catch {
+        showToast('Clipboard access denied');
+    }
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function formatDuration(sec) {
+    if (!sec) return '';
+    const h = Math.floor(sec / 3600);
+    const m = Math.floor((sec % 3600) / 60);
+    const s = sec % 60;
+    return h > 0 ? `${h}h ${m}m` : `${m}m ${s}s`;
+}
+
+function formatViews(n) {
+    if (!n) return '';
+    if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M views';
+    if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K views';
+    return n + ' views';
+}
+
+function renderMarkdown(text) {
+    return marked.parse(text || '');
+}
+
+// ─── View Transitions ────────────────────────────────────────────────────────
+function showProcessingScreen() {
+    document.getElementById('processingScreen').classList.add('active');
+}
+
+function hideProcessingScreen() {
+    document.getElementById('processingScreen').classList.remove('active');
+}
+
+function transitionToApp() {
+    const landing = document.getElementById('landingPage');
+    const app = document.getElementById('appView');
+    landing.classList.add('hide');
+    setTimeout(() => {
+        landing.style.display = 'none';
+        app.style.display = 'block';
+        hideProcessingScreen();
+    }, 500);
+}
+
+function goHome() {
+    const landing = document.getElementById('landingPage');
+    const app = document.getElementById('appView');
+    app.style.display = 'none';
+    landing.style.display = '';
+    landing.classList.remove('hide');
+    renderLandingHistory();
+}
+
+// ─── Tab Switching ───────────────────────────────────────────────────────────
+function switchTab(panel, tab, btnEl) {
+    const header = btnEl.parentElement;
+    header.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btnEl.classList.add('active');
+
+    if (panel === 'left') {
+        currentLeftTab = tab;
+        const el = document.getElementById('leftContent');
+        if (contentCache[tab]) {
+            el.innerHTML = contentCache[tab];
+        } else if (currentVideoId) {
+            el.innerHTML = '<div class="placeholder"><span class="spinner"></span> Generating...</div>';
+            loadFeature(tab);
+        } else {
+            el.innerHTML = '<div class="placeholder">Process a video first</div>';
+        }
+    }
+}
+
+// ─── Process Video ───────────────────────────────────────────────────────────
+async function processVideo() {
+    const url = document.getElementById('urlInput').value.trim();
+    if (!url) { showToast('Please enter a YouTube URL'); return; }
+
+    const btn = document.getElementById('processBtn');
+    btn.disabled = true;
+    btn.textContent = 'Processing...';
+
+    // Show processing screen
+    showProcessingScreen();
+    const progBar = document.getElementById('processingBar');
+    const progStep = document.getElementById('processingStep');
+    const progPercent = document.getElementById('processingPercent');
+    progBar.style.width = '5%';
+    progPercent.textContent = '5%';
+
+    // Reset
+    contentCache = { summary: '', chapters: '', concepts: '', mindmap: '', notes: '', transcript: '' };
+    rawContentCache = { ...contentCache };
+
+    const steps = { metadata: 10, transcript_yt: 20, download: 30, transcribe: 55, transcript_done: 60, chunk: 65, embed: 80, summary: 95, cached: 100 };
+
+    try {
+        const response = await fetch('/api/process', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url })
+        });
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop();
+
+            let eventType = '';
+            for (const line of lines) {
+                if (line.startsWith('event: ')) {
+                    eventType = line.slice(7).trim();
+                } else if (line.startsWith('data: ')) {
+                    const data = JSON.parse(line.slice(6));
+                    handleSSE(eventType, data, progBar, progStep, progPercent, steps);
+                }
+            }
+        }
+    } catch (err) {
+        progStep.textContent = 'Error: ' + err.message;
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Summarize';
+}
+
+function handleSSE(event, data, progBar, progStep, progPercent, steps) {
+    if (event === 'progress') {
+        progStep.textContent = data.message;
+        if (steps[data.step]) {
+            const pct = steps[data.step];
+            progBar.style.width = pct + '%';
+            progPercent.textContent = pct + '%';
+        }
+    } else if (event === 'metadata') {
+        currentVideoId = data.video_id;
+        document.getElementById('videoEmbed').src = `https://www.youtube.com/embed/${data.video_id}?enablejsapi=1`;
+        document.getElementById('videoTitle').textContent = data.title;
+        document.getElementById('videoChannel').textContent = data.channel;
+        document.getElementById('videoDuration').textContent = formatDuration(data.duration);
+        document.getElementById('videoViews').textContent = formatViews(data.view_count);
+        document.getElementById('videoDesc').textContent = data.description;
+        document.getElementById('videoPanel').style.display = 'flex';
+    } else if (event === 'complete') {
+        progBar.style.width = '100%';
+        progPercent.textContent = '100%';
+        progStep.textContent = 'Done! Launching app...';
+
+        currentVideoId = data.video_id;
+        rawContentCache.summary = data.summary || '';
+        rawContentCache.transcript = data.transcript || '';
+        contentCache.summary = renderMarkdown(data.summary || '');
+
+        const tsText = data.timestamped_transcript || data.transcript || '';
+        contentCache.transcript = `<div class="transcript-text">${formatTimestampedTranscript(tsText)}</div>`;
+
+        document.getElementById('leftContent').innerHTML = contentCache.summary;
+        document.getElementById('rightContent').innerHTML = contentCache.transcript;
+
+        // Sync URL to header input
+        document.getElementById('urlInputHeader').value = document.getElementById('urlInput').value;
+
+        setTimeout(() => {
+            transitionToApp();
+        }, 800);
+    } else if (event === 'error') {
+        progStep.textContent = data.message;
+        setTimeout(() => hideProcessingScreen(), 3000);
+    }
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// ─── Load Feature (lazy) ────────────────────────────────────────────────────
+async function loadFeature(feature, style) {
+    if (!currentVideoId) return;
+
+    try {
+        const response = await fetch('/api/feature', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ video_id: currentVideoId, feature, style: style || 'detailed' })
+        });
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop();
+
+            let eventType = '';
+            for (const line of lines) {
+                if (line.startsWith('event: ')) {
+                    eventType = line.slice(7).trim();
+                } else if (line.startsWith('data: ')) {
+                    const data = JSON.parse(line.slice(6));
+                    if (eventType === 'result') {
+                        rawContentCache[feature] = data.text;
+                        contentCache[feature] = renderMarkdown(data.text);
+                        if (currentLeftTab === feature) {
+                            document.getElementById('leftContent').innerHTML = contentCache[feature];
+                        }
+                    } else if (eventType === 'error') {
+                        document.getElementById('leftContent').innerHTML = `<div class="placeholder">${data.message}</div>`;
+                    }
+                }
+            }
+        }
+    } catch (err) {
+        document.getElementById('leftContent').innerHTML = `<div class="placeholder">${err.message}</div>`;
+    }
+}
+
+function regenerateFeature() {
+    if (!currentVideoId) { showToast('Process a video first'); return; }
+    contentCache[currentLeftTab] = '';
+    rawContentCache[currentLeftTab] = '';
+    document.getElementById('leftContent').innerHTML = '<div class="placeholder"><span class="spinner"></span> Regenerating...</div>';
+    loadFeature(currentLeftTab);
+}
+
+// ─── Chat ────────────────────────────────────────────────────────────────────
+function askQuick(q) {
+    document.getElementById('chatInput').value = q;
+    sendChat();
+}
+
+async function sendChat() {
+    const input = document.getElementById('chatInput');
+    const msg = input.value.trim();
+    if (!msg) return;
+    if (!currentVideoId) { showToast('Process a video first'); return; }
+
+    input.value = '';
+    const chatEl = document.getElementById('chatMessages');
+
+    // Add user message
+    chatEl.innerHTML += `<div class="msg user">${escapeHtml(msg)}</div>`;
+
+    // Add loading
+    const loadingId = 'loading_' + Date.now();
+    chatEl.innerHTML += `<div class="msg assistant" id="${loadingId}"><span class="spinner"></span> Searching transcript...</div>`;
+    chatEl.scrollTop = chatEl.scrollHeight;
+
+    try {
+        const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ video_id: currentVideoId, message: msg })
+        });
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop();
+
+            let eventType = '';
+            for (const line of lines) {
+                if (line.startsWith('event: ')) {
+                    eventType = line.slice(7).trim();
+                } else if (line.startsWith('data: ')) {
+                    const data = JSON.parse(line.slice(6));
+                    const loadEl = document.getElementById(loadingId);
+                    if (eventType === 'answer' && loadEl) {
+                        loadEl.innerHTML = `<div class="md-content">${renderMarkdown(data.text)}</div>`;
+                    } else if (eventType === 'error' && loadEl) {
+                        loadEl.innerHTML = data.message;
+                    }
+                }
+            }
+        }
+    } catch (err) {
+        const loadEl = document.getElementById(loadingId);
+        if (loadEl) loadEl.innerHTML = err.message;
+    }
+
+    chatEl.scrollTop = chatEl.scrollHeight;
+}
+
+// ─── Copy / Download ─────────────────────────────────────────────────────────
+function copyContent(panel) {
+    let text = '';
+    if (panel === 'left') {
+        text = rawContentCache[currentLeftTab] || document.getElementById('leftContent').innerText;
+    } else {
+        text = rawContentCache.transcript || document.getElementById('rightContent').innerText;
+    }
+    navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard!'));
+}
+
+function downloadContent(panel) {
+    let text = '', filename = '';
+    if (panel === 'left') {
+        text = rawContentCache[currentLeftTab] || document.getElementById('leftContent').innerText;
+        filename = `${currentLeftTab}_${currentVideoId || 'video'}.md`;
+    } else {
+        text = rawContentCache.transcript || document.getElementById('rightContent').innerText;
+        filename = `transcript_${currentVideoId || 'video'}.txt`;
+    }
+    const blob = new Blob([text], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    showToast('Downloaded!');
+}
+
+// ─── Timestamp Formatting ────────────────────────────────────────────────────
+function formatTimestampedTranscript(text) {
+    const escaped = escapeHtml(text);
+    return escaped.replace(/\[(\d{2}):(\d{2})\]/g, (match, mins, secs) => {
+        const totalSecs = parseInt(mins) * 60 + parseInt(secs);
+        return `<span class="timestamp-marker" onclick="seekVideo(${totalSecs})">${match}</span>`;
+    });
+}
+
+function seekVideo(seconds) {
+    const iframe = document.getElementById('videoEmbed');
+    if (currentVideoId) {
+        iframe.src = `https://www.youtube.com/embed/${currentVideoId}?start=${seconds}&autoplay=1&enablejsapi=1`;
+    }
+}
+
+// ─── Export PDF ──────────────────────────────────────────────────────────────
+function exportPDF(panel) {
+    const sourceEl = document.getElementById(panel === 'left' ? 'leftContent' : 'rightContent');
+    const title = panel === 'left' ? currentLeftTab : 'transcript';
+
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = sourceEl.innerHTML;
+    wrapper.style.cssText = 'color:#1e1b3a;background:#fff;padding:24px;font-family:Arial,sans-serif;font-size:13px;line-height:1.7;';
+    wrapper.querySelectorAll('.timestamp-marker').forEach(el => {
+        el.style.cssText = 'background:#7c6ef0;color:#fff;padding:2px 6px;border-radius:4px;font-size:11px;cursor:default;';
+    });
+    wrapper.querySelectorAll('th').forEach(el => {
+        el.style.cssText = 'background:#f0eeff;padding:6px 10px;border:1px solid #e4e0f7;font-weight:600;';
+    });
+    wrapper.querySelectorAll('td').forEach(el => {
+        el.style.cssText = 'padding:6px 10px;border:1px solid #e4e0f7;';
+    });
+
+    const opt = {
+        margin: 0.6,
+        filename: `${title}_${currentVideoId || 'video'}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+    };
+
+    html2pdf().set(opt).from(wrapper).save();
+    showToast('Exporting PDF...');
+}
+
+// ─── Enter key for URL ──────────────────────────────────────────────────────
+document.getElementById('urlInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') processVideo();
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ──── WATCH VIEW: Video + Synced Transcript + Progress + History ─────────
+// ═══════════════════════════════════════════════════════════════════════════
+
+let watchPlayer = null;
+let watchSegments = [];
+let watchProgressInterval = null;
+let watchVideoDuration = 0;
+let maxWatchedPct = 0;
+let ytApiReady = false;
+
+// ─── YouTube IFrame API ──────────────────────────────────────────────────
+// Load the IFrame Player API code asynchronously
+const ytScript = document.createElement('script');
+ytScript.src = 'https://www.youtube.com/iframe_api';
+document.head.appendChild(ytScript);
+
+function onYouTubeIframeAPIReady() {
+    ytApiReady = true;
+}
+// Make it globally accessible
+window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
+
+// ─── Open Watch View ─────────────────────────────────────────────────────
+async function openWatchView() {
+    if (!currentVideoId) { showToast('Process a video first'); return; }
+
+    const overlay = document.getElementById('watchOverlay');
+    overlay.classList.add('active');
+
+    const title = document.getElementById('videoTitle').textContent;
+    document.getElementById('watchTitle').textContent = title;
+
+    // Reset
+    maxWatchedPct = 0;
+    document.getElementById('watchProgressPct').textContent = '0%';
+    document.getElementById('watchProgressFill').style.width = '0%';
+    document.getElementById('watchCurrentTime').textContent = '0:00';
+
+    // Load from history if we have previous progress
+    const history = getHistory();
+    const existing = history.find(h => h.videoId === currentVideoId);
+    if (existing) maxWatchedPct = existing.watchPct || 0;
+
+    // Fetch segments
+    try {
+        const res = await fetch(`/api/segments/${encodeURIComponent(currentVideoId)}`);
+        const data = await res.json();
+        watchSegments = data.segments || [];
+        watchVideoDuration = data.duration || 0;
+        document.getElementById('watchTotalTime').textContent = formatTimeShort(watchVideoDuration);
+        renderTranscriptSegments();
+    } catch {
+        document.getElementById('watchTranscriptList').innerHTML = '<div class="placeholder">Could not load segments</div>';
+    }
+
+    // Create or reload player
+    createWatchPlayer(currentVideoId);
+}
+
+function createWatchPlayer(videoId) {
+    // Destroy existing player
+    if (watchPlayer && watchPlayer.destroy) {
+        try { watchPlayer.destroy(); } catch {}
+    }
+
+    const waitForApi = () => {
+        if (ytApiReady) {
+            watchPlayer = new YT.Player('watchPlayer', {
+                videoId: videoId,
+                width: '100%',
+                height: '100%',
+                playerVars: {
+                    autoplay: 1,
+                    modestbranding: 1,
+                    rel: 0,
+                },
+                events: {
+                    onStateChange: onWatchPlayerStateChange,
+                    onReady: onWatchPlayerReady,
+                }
+            });
+        } else {
+            setTimeout(waitForApi, 200);
+        }
+    };
+    waitForApi();
+}
+
+function onWatchPlayerReady(event) {
+    watchVideoDuration = event.target.getDuration() || watchVideoDuration;
+    document.getElementById('watchTotalTime').textContent = formatTimeShort(watchVideoDuration);
+    startProgressTracking();
+}
+
+function onWatchPlayerStateChange(event) {
+    if (event.data === YT.PlayerState.PLAYING) {
+        startProgressTracking();
+    } else if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) {
+        stopProgressTracking();
+        if (event.data === YT.PlayerState.ENDED) {
+            maxWatchedPct = 100;
+            updateWatchProgressUI(100);
+            saveToHistory();
+        }
+    }
+}
+
+// ─── Progress Tracking ───────────────────────────────────────────────────
+function startProgressTracking() {
+    stopProgressTracking();
+    watchProgressInterval = setInterval(() => {
+        if (!watchPlayer || !watchPlayer.getCurrentTime) return;
+
+        const currentTime = watchPlayer.getCurrentTime();
+        const duration = watchPlayer.getDuration() || watchVideoDuration;
+        if (duration <= 0) return;
+
+        const pct = Math.min(100, Math.round((currentTime / duration) * 100));
+        if (pct > maxWatchedPct) maxWatchedPct = pct;
+
+        updateWatchProgressUI(maxWatchedPct);
+        document.getElementById('watchCurrentTime').textContent = formatTimeShort(currentTime);
+
+        // Highlight active segment
+        highlightActiveSegment(currentTime);
+
+        // Save to history every 5 seconds
+        if (Math.round(currentTime) % 5 === 0) saveToHistory();
+    }, 500);
+}
+
+function stopProgressTracking() {
+    if (watchProgressInterval) {
+        clearInterval(watchProgressInterval);
+        watchProgressInterval = null;
+    }
+}
+
+function updateWatchProgressUI(pct) {
+    document.getElementById('watchProgressPct').textContent = pct + '%';
+    document.getElementById('watchProgressFill').style.width = pct + '%';
+}
+
+// ─── Render Transcript Segments ──────────────────────────────────────────
+function renderTranscriptSegments() {
+    const container = document.getElementById('watchTranscriptList');
+    if (!watchSegments.length) {
+        container.innerHTML = '<div class="placeholder">No transcript segments available</div>';
+        return;
+    }
+
+    container.innerHTML = watchSegments.map((seg, i) => {
+        const mins = Math.floor(seg.start / 60);
+        const secs = Math.floor(seg.start % 60);
+        const timeStr = `${mins}:${secs.toString().padStart(2, '0')}`;
+        return `<div class="transcript-segment" data-index="${i}" data-start="${seg.start}" onclick="seekWatchPlayer(${seg.start})">
+            <span class="segment-time">${timeStr}</span>
+            <span class="segment-text">${escapeHtml(seg.text)}</span>
+        </div>`;
+    }).join('');
+}
+
+function highlightActiveSegment(currentTime) {
+    const segments = document.querySelectorAll('.transcript-segment');
+    let activeIndex = -1;
+
+    for (let i = watchSegments.length - 1; i >= 0; i--) {
+        if (currentTime >= watchSegments[i].start) {
+            activeIndex = i;
+            break;
+        }
+    }
+
+    segments.forEach((seg, i) => {
+        seg.classList.remove('active');
+        if (i < activeIndex) seg.classList.add('watched');
+        if (i === activeIndex) {
+            seg.classList.add('active');
+            // Auto-scroll to active segment
+            const container = document.getElementById('watchTranscriptList');
+            const segTop = seg.offsetTop - container.offsetTop;
+            const containerH = container.clientHeight;
+            if (segTop < container.scrollTop || segTop > container.scrollTop + containerH - 60) {
+                container.scrollTo({ top: segTop - containerH / 3, behavior: 'smooth' });
+            }
+        }
+    });
+}
+
+function seekWatchPlayer(seconds) {
+    if (watchPlayer && watchPlayer.seekTo) {
+        watchPlayer.seekTo(seconds, true);
+    }
+}
+
+// ─── Close Watch View ────────────────────────────────────────────────────
+function closeWatchView() {
+    stopProgressTracking();
+    saveToHistory();
+    document.getElementById('watchOverlay').classList.remove('active');
+    // Pause the player
+    if (watchPlayer && watchPlayer.pauseVideo) {
+        try { watchPlayer.pauseVideo(); } catch {}
+    }
+}
+
+// ─── Time Formatting ─────────────────────────────────────────────────────
+function formatTimeShort(seconds) {
+    if (!seconds || seconds < 0) return '0:00';
+    const s = Math.floor(seconds);
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = s % 60;
+    if (h > 0) return `${h}:${m.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`;
+    return `${m}:${sec.toString().padStart(2,'0')}`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ──── WATCH HISTORY (localStorage) ──────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+
+const HISTORY_KEY = 'yt_summarizer_history';
+
+function getHistory() {
+    try {
+        return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+    } catch { return []; }
+}
+
+function saveToHistory() {
+    if (!currentVideoId) return;
+    const history = getHistory();
+
+    const title = document.getElementById('videoTitle').textContent || '';
+    const channel = document.getElementById('videoChannel').textContent || '';
+    const thumbnail = `https://img.youtube.com/vi/${currentVideoId}/mqdefault.jpg`;
+    const duration = watchVideoDuration || 0;
+
+    const existingIdx = history.findIndex(h => h.videoId === currentVideoId);
+    const entry = {
+        videoId: currentVideoId,
+        title: title,
+        channel: channel,
+        thumbnail: thumbnail,
+        duration: duration,
+        watchPct: maxWatchedPct,
+        lastWatched: new Date().toISOString(),
+    };
+
+    if (existingIdx >= 0) {
+        // Update existing — keep the higher watch percentage
+        entry.watchPct = Math.max(history[existingIdx].watchPct || 0, maxWatchedPct);
+        history.splice(existingIdx, 1);
+    }
+    // Add to front (most recent first)
+    history.unshift(entry);
+
+    // Limit to 50 entries
+    if (history.length > 50) history.length = 50;
+
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+}
+
+function toggleHistory() {
+    const overlay = document.getElementById('historyOverlay');
+    const isActive = overlay.classList.contains('active');
+    if (isActive) {
+        overlay.classList.remove('active');
+    } else {
+        renderHistoryList();
+        overlay.classList.add('active');
+    }
+}
+
+function renderHistoryList() {
+    const container = document.getElementById('historyList');
+    const history = getHistory();
+
+    if (!history.length) {
+        container.innerHTML = `<div class="history-empty">
+            <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <div>No watch history yet</div>
+            <div style="margin-top:4px;font-size:12px">Videos you watch will appear here</div>
+        </div>`;
+        return;
+    }
+
+    container.innerHTML = history.map(h => {
+        const date = new Date(h.lastWatched);
+        const dateStr = date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+            + ' ' + date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+        const pct = h.watchPct || 0;
+        const pctColor = pct >= 80 ? 'var(--green)' : pct >= 40 ? 'var(--accent)' : 'var(--text3)';
+
+        return `<div class="history-item" onclick="loadFromHistory('${h.videoId}')">
+            <img class="history-thumb" src="${escapeHtml(h.thumbnail)}" alt="" loading="lazy" onerror="this.style.display='none'"/>
+            <div class="history-info">
+                <div class="h-title">${escapeHtml(h.title)}</div>
+                <div class="h-channel">${escapeHtml(h.channel)}</div>
+                <div class="h-date">${dateStr}</div>
+                <div style="display:flex;align-items:center;gap:8px">
+                    <div class="history-progress-mini" style="flex:1">
+                        <div class="history-progress-mini-fill" style="width:${pct}%"></div>
+                    </div>
+                    <span class="history-pct" style="color:${pctColor}">${pct}%</span>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function loadFromHistory(videoId) {
+    toggleHistory(); // close panel
+    const url = `https://www.youtube.com/watch?v=${videoId}`;
+    document.getElementById('urlInput').value = url;
+    document.getElementById('urlInputHeader').value = url;
+    processVideo();
+}
+
+function clearHistory() {
+    if (confirm('Clear all watch history?')) {
+        localStorage.removeItem(HISTORY_KEY);
+        renderHistoryList();
+        renderLandingHistory();
+        showToast('History cleared');
+    }
+}
+
+// ─── Landing Page History ────────────────────────────────────────────────
+function renderLandingHistory() {
+    const section = document.getElementById('landingHistory');
+    const grid = document.getElementById('landingHistoryGrid');
+    const history = getHistory();
+
+    if (!history.length) {
+        section.style.display = 'none';
+        return;
+    }
+
+    section.style.display = 'block';
+    // Show up to 6 most recent
+    const items = history.slice(0, 6);
+
+    grid.innerHTML = items.map(h => {
+        const pct = h.watchPct || 0;
+        const date = new Date(h.lastWatched);
+        const dateStr = date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+        return `<div class="landing-history-card" onclick="loadFromHistory('${h.videoId}')">
+            <div class="card-thumb-wrap">
+                <img class="card-thumb" src="${escapeHtml(h.thumbnail)}" alt="" loading="lazy" onerror="this.style.display='none'"/>
+                <span class="card-pct-badge">${pct}%</span>
+            </div>
+            <div class="card-progress"><div class="card-progress-fill" style="width:${pct}%"></div></div>
+            <div class="card-info">
+                <div class="card-title">${escapeHtml(h.title)}</div>
+                <div class="card-meta">
+                    <span class="card-channel">${escapeHtml(h.channel)}</span>
+                    <span>${dateStr}</span>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+// Render on page load
+renderLandingHistory();
+</script>
+</body>
+</html>

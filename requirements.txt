@@ -1,0 +1,14 @@
+fastapi
+uvicorn[standard]
+sse-starlette
+python-dotenv
+yt-dlp
+jinja2
+pydantic
+langchain
+langchain-huggingface
+langchain-groq
+langchain-community
+faiss-cpu
+youtube-transcript-api
+sentence-transformers
