@@ -18,8 +18,8 @@
 ## 📑 Table of Contents
 
 - [📑 Table of Contents](#-table-of-contents)
-- [� Demo](#-demo)
-- [�🌟 Features at a Glance](#-features-at-a-glance)
+- [🎥 Demo](#-demo)
+- [🌟 Features at a Glance](#-features-at-a-glance)
 - [⚡ How It Works (Simple)](#-how-it-works-simple)
 - [🏗️ System Architecture](#️-system-architecture)
 - [🔄 Video Processing Pipeline](#-video-processing-pipeline)
@@ -56,7 +56,7 @@
 
 ---
 
-## � Demo
+## 🎥 Demo
 
 <p align="center">
   <i>📸 Screenshots coming soon — run locally to see the full experience!</i>
@@ -66,7 +66,7 @@
 
 ---
 
-## �🌟 Features at a Glance
+## 🌟 Features at a Glance
 
 | Feature | Description |
 |---------|-------------|
@@ -148,12 +148,11 @@ graph TB
     PROC -->|Fetch Transcript| YT
     PROC -->|Video Metadata| YTDLP
     PROC -->|Embed Chunks| FAISS
+    PROC -->|Cache Data| MEM
     GEN -->|LLM Calls| GROQ
     RAG -->|Vector Search| FAISS
     RAG -->|Generate Answer| GROQ
-
-    MEM -->|Store Video Data| PROC
-    LS -->|Watch History| HIST
+    HIST -->|Persist History| LS
 
     style Client fill:#1a1a2e,stroke:#7c6ef0,color:#e8e6f0
     style Server fill:#12121a,stroke:#6ee7a0,color:#e8e6f0
@@ -334,64 +333,29 @@ flowchart TD
 The project is organized into **6 core modules**, each handling a distinct responsibility layer — from data ingestion to user-facing interactions.
 
 ```mermaid
-graph TB
-    subgraph M1["📥 Module 1: Video Ingestion & Data Extraction"]
-        M1A[URL Parsing]
-        M1B[Metadata Fetch]
-        M1C[Transcript Fetch]
-        M1D[Chunking Engine]
-    end
+flowchart TD
+    M1["📥 Module 1\nVideo Ingestion & Data Extraction"]
+    M2["🧠 Module 2\nAI/ML Processing & Summarization"]
+    M3["💬 Module 3\nRAG Chat & Conversational AI"]
+    M6["⚙️ Module 6\nAPI Layer & Backend Infrastructure"]
+    M4["🖥️ Module 4\nFrontend UI & User Experience"]
+    M5["▶️ Module 5\nWatch View & Synced Playback"]
 
-    subgraph M2["🧠 Module 2: AI/ML Processing & Summarization"]
-        M2A[Embedding Generation]
-        M2B[FAISS Indexing]
-        M2C[Map-Reduce Summary]
-        M2D[Content Generation]
-    end
-
-    subgraph M3["💬 Module 3: RAG Chat & Conversational AI"]
-        M3A[Query Embedding]
-        M3B[Similarity Search]
-        M3C[Context Builder]
-        M3D[Answer Streaming]
-    end
-
-    subgraph M4["🖥️ Module 4: Frontend UI & User Experience"]
-        M4A[Landing Page]
-        M4B[Dashboard Tabs]
-        M4C[Chat Interface]
-        M4D[Theme & Export]
-    end
-
-    subgraph M5["▶️ Module 5: Watch View & Synced Playback"]
-        M5A[YouTube Player]
-        M5B[Transcript Sync]
-        M5C[Progress Tracking]
-        M5D[Watch History]
-    end
-
-    subgraph M6["⚙️ Module 6: API Layer & Backend Infrastructure"]
-        M6A[FastAPI Routes]
-        M6B[SSE Streaming]
-        M6C[Validation]
-        M6D[Deployment Config]
-    end
-
-    M1 -->|Chunks + Segments| M2
+    M1 -->|Chunks & Segments| M2
     M2 -->|Vector Store| M3
     M2 -->|Generated Content| M6
     M3 -->|Answers| M6
     M6 -->|SSE Events| M4
     M6 -->|Segments API| M5
-    M4 -->|User Actions| M6
-    M5 -->|History Data| M4
+    M4 -.->|User Actions| M6
+    M5 -.->|History Data| M4
 
-    style M1 fill:#7c6ef0,stroke:#7c6ef0,color:#fff
-    style M2 fill:#ec4899,stroke:#ec4899,color:#fff
-    style M3 fill:#06b6d4,stroke:#06b6d4,color:#fff
-    style M4 fill:#f59e0b,stroke:#f59e0b,color:#000
-    style M5 fill:#6ee7a0,stroke:#6ee7a0,color:#000
-    style M6 fill:#f87171,stroke:#f87171,color:#fff
+    style M1 fill:#7c6ef0,stroke:#5b4cc4,color:#fff
+    style M2 fill:#ec4899,stroke:#c9377e,color:#fff
+    style M3 fill:#06b6d4,stroke:#0891a8,color:#fff
+    style M4 fill:#f59e0b,stroke:#d68a09,color:#000
+    style M5 fill:#6ee7a0,stroke:#4ade80,color:#000
+    style M6 fill:#f87171,stroke:#dc5555,color:#fff
 ```
 
 ---
@@ -514,39 +478,39 @@ graph TB
 
 ```mermaid
 graph LR
-    subgraph Frontend
-        HTML[HTML5]
-        CSS[CSS3 + CSS Variables]
-        JS[Vanilla JavaScript]
-        MARKED[marked.js — Markdown]
-        PDF[html2pdf.js — PDF Export]
-        YTAPI[YouTube IFrame API]
+    subgraph Frontend["🖥️ Frontend"]
+        HTML["HTML5"]
+        CSS["CSS3 + Variables"]
+        JS["Vanilla JavaScript"]
+        MARKED["marked.js"]
+        PDF["html2pdf.js"]
+        YTAPI["YouTube IFrame API"]
     end
 
-    subgraph Backend
-        FAST[FastAPI]
-        SSE[Server-Sent Events]
-        LC[LangChain]
-        PYDANTIC[Pydantic]
+    subgraph Backend["⚙️ Backend"]
+        FAST["FastAPI"]
+        SSE["Server-Sent Events"]
+        LC["LangChain"]
+        PYDANTIC["Pydantic"]
     end
 
-    subgraph AI/ML
-        GROQ[Groq — LLM Inference]
-        HF[HuggingFace Embeddings]
-        FAISS[FAISS — Vector Search]
-        MODEL["LLM: llama-3.3-70b"]
-        EMBED["Embed: all-MiniLM-L6-v2"]
+    subgraph AIML["🧠 AI / ML"]
+        GROQ["Groq LLM Inference"]
+        HF["HuggingFace Embeddings"]
+        FAISS["FAISS Vector Search"]
+        MODEL["llama-3.3-70b"]
+        EMBED["all-MiniLM-L6-v2"]
     end
 
-    subgraph Data
-        YTDLP[yt-dlp — Metadata]
-        YTRANS[youtube-transcript-api]
-        LOCAL[localStorage — History]
+    subgraph Data["📦 Data & APIs"]
+        YTDLP["yt-dlp"]
+        YTRANS["youtube-transcript-api"]
+        LOCAL["localStorage"]
     end
 
     style Frontend fill:#1a1a2e,stroke:#7c6ef0,color:#e8e6f0
     style Backend fill:#12121a,stroke:#6ee7a0,color:#e8e6f0
-    style AI/ML fill:#22223a,stroke:#ec4899,color:#e8e6f0
+    style AIML fill:#22223a,stroke:#ec4899,color:#e8e6f0
     style Data fill:#0a0a0f,stroke:#f59e0b,color:#e8e6f0
 ```
 
