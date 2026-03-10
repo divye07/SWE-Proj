@@ -19,7 +19,7 @@
 
 - [📑 Table of Contents](#-table-of-contents)
 - [� Demo](#-demo)
-- [🌟 Features at a Glance](#-features-at-a-glance)
+- [�🌟 Features at a Glance](#-features-at-a-glance)
 - [⚡ How It Works (Simple)](#-how-it-works-simple)
 - [🏗️ System Architecture](#️-system-architecture)
 - [🔄 Video Processing Pipeline](#-video-processing-pipeline)
@@ -28,6 +28,13 @@
 - [▶️ Watch View — Synced Transcript](#️-watch-view--synced-transcript)
 - [🕐 Watch History System](#-watch-history-system)
 - [📂 Project Structure](#-project-structure)
+- [🧩 Module-wise Division](#-module-wise-division)
+  - [📥 Module 1 — Video Ingestion \& Data Extraction](#-module-1--video-ingestion--data-extraction)
+  - [🧠 Module 2 — AI/ML Processing \& Summarization Engine](#-module-2--aiml-processing--summarization-engine)
+  - [💬 Module 3 — RAG Chat \& Conversational AI](#-module-3--rag-chat--conversational-ai)
+  - [🖥️ Module 4 — Frontend UI \& User Experience](#️-module-4--frontend-ui--user-experience)
+  - [▶️ Module 5 — Watch View \& Synced Transcript Playback](#️-module-5--watch-view--synced-transcript-playback)
+  - [⚙️ Module 6 — API Layer \& Backend Infrastructure](#️-module-6--api-layer--backend-infrastructure)
 - [🛠️ Tech Stack](#️-tech-stack)
 - [⚡ Performance](#-performance)
 - [🚀 Quick Start](#-quick-start)
@@ -319,6 +326,187 @@ flowchart TD
 ├── 📁 extra-files/             # Runtime files (FAISS index, etc.)
 └── 📁 __pycache__/             # Python cache (ignored)
 ```
+
+---
+
+## 🧩 Module-wise Division
+
+The project is organized into **6 core modules**, each handling a distinct responsibility layer — from data ingestion to user-facing interactions.
+
+```mermaid
+graph TB
+    subgraph M1["📥 Module 1: Video Ingestion & Data Extraction"]
+        M1A[URL Parsing]
+        M1B[Metadata Fetch]
+        M1C[Transcript Fetch]
+        M1D[Chunking Engine]
+    end
+
+    subgraph M2["🧠 Module 2: AI/ML Processing & Summarization"]
+        M2A[Embedding Generation]
+        M2B[FAISS Indexing]
+        M2C[Map-Reduce Summary]
+        M2D[Content Generation]
+    end
+
+    subgraph M3["💬 Module 3: RAG Chat & Conversational AI"]
+        M3A[Query Embedding]
+        M3B[Similarity Search]
+        M3C[Context Builder]
+        M3D[Answer Streaming]
+    end
+
+    subgraph M4["🖥️ Module 4: Frontend UI & User Experience"]
+        M4A[Landing Page]
+        M4B[Dashboard Tabs]
+        M4C[Chat Interface]
+        M4D[Theme & Export]
+    end
+
+    subgraph M5["▶️ Module 5: Watch View & Synced Playback"]
+        M5A[YouTube Player]
+        M5B[Transcript Sync]
+        M5C[Progress Tracking]
+        M5D[Watch History]
+    end
+
+    subgraph M6["⚙️ Module 6: API Layer & Backend Infrastructure"]
+        M6A[FastAPI Routes]
+        M6B[SSE Streaming]
+        M6C[Validation]
+        M6D[Deployment Config]
+    end
+
+    M1 -->|Chunks + Segments| M2
+    M2 -->|Vector Store| M3
+    M2 -->|Generated Content| M6
+    M3 -->|Answers| M6
+    M6 -->|SSE Events| M4
+    M6 -->|Segments API| M5
+    M4 -->|User Actions| M6
+    M5 -->|History Data| M4
+
+    style M1 fill:#7c6ef0,stroke:#7c6ef0,color:#fff
+    style M2 fill:#ec4899,stroke:#ec4899,color:#fff
+    style M3 fill:#06b6d4,stroke:#06b6d4,color:#fff
+    style M4 fill:#f59e0b,stroke:#f59e0b,color:#000
+    style M5 fill:#6ee7a0,stroke:#6ee7a0,color:#000
+    style M6 fill:#f87171,stroke:#f87171,color:#fff
+```
+
+---
+
+### 📥 Module 1 — Video Ingestion & Data Extraction
+
+> *Handles everything from URL input to producing clean, chunked transcript data ready for AI processing.*
+
+| # | Functionality | Description |
+|:-:|---------------|-------------|
+| 1 | **URL Parsing** | YouTube URL validation and video ID extraction |
+| 2 | **Metadata Retrieval** | Fetch title, channel, thumbnail, and duration via yt-dlp |
+| 3 | **Manual Transcript Fetch** | Priority fetch of human-written captions (English & Hindi) |
+| 4 | **Auto-Caption Fallback** | Fallback to YouTube's auto-generated transcript |
+| 5 | **Multi-Language Detection** | Detect and select best available transcript language |
+| 6 | **Segment Parsing** | Parse raw transcript into timestamped segments with durations |
+| 7 | **Text Chunking** | Split transcript into overlapping chunks (1200 chars, 200 overlap) |
+| 8 | **Cache Detection** | Skip re-processing for already-processed videos |
+| 9 | **Error Handling** | Graceful errors for invalid URLs or missing transcripts |
+| 10 | **Segment API** | Serve raw segments via dedicated endpoint for playback sync |
+
+---
+
+### 🧠 Module 2 — AI/ML Processing & Summarization Engine
+
+> *Core intelligence layer — embeds transcript chunks, builds vector indices, and generates all AI content.*
+
+| # | Functionality | Description |
+|:-:|---------------|-------------|
+| 1 | **Embedding Generation** | Generate 384-dim vectors using HuggingFace all-MiniLM-L6-v2 |
+| 2 | **FAISS Indexing** | Build and store vector database from transcript chunk embeddings |
+| 3 | **Map-Reduce Summary** | Batch-wise partial summaries merged into a final comprehensive summary |
+| 4 | **Summary Merging** | Final merge producing overview, key takeaways, and conclusion |
+| 5 | **Chapter Generation** | Auto-generate chapter breakdowns with estimated timestamps |
+| 6 | **Concept Extraction** | Extract key concepts, terms, and people as structured tables |
+| 7 | **Mind Map Generation** | Produce hierarchical mind maps from video content |
+| 8 | **Study Notes** | Generate structured, revision-ready study notes |
+| 9 | **Prompt Engineering** | Tailored system prompts for each feature (summary, chapters, etc.) |
+| 10 | **Groq LLM Integration** | Ultra-fast inference via Groq-hosted llama-3.3-70b model |
+
+---
+
+### 💬 Module 3 — RAG Chat & Conversational AI
+
+> *Retrieval-Augmented Generation engine — lets users ask any question and get answers grounded in the video.*
+
+| # | Functionality | Description |
+|:-:|---------------|-------------|
+| 1 | **Query Embedding** | Embed user questions using the same sentence-transformer model |
+| 2 | **Similarity Search** | FAISS top-5 nearest-neighbor search over transcript chunks |
+| 3 | **Context Construction** | Build a context window from the most relevant retrieved chunks |
+| 4 | **Prompt Assembly** | Combine context + user question + system instructions into a prompt |
+| 5 | **Streaming Generation** | Stream LLM-generated answers token-by-token via Groq |
+| 6 | **SSE Delivery** | Real-time answer delivery to frontend via Server-Sent Events |
+| 7 | **Chat History** | Maintain conversation history within a session |
+| 8 | **Out-of-Scope Handling** | Gracefully decline questions not answerable from the transcript |
+| 9 | **Isolated Vector Stores** | Per-video FAISS indices to avoid cross-video contamination |
+| 10 | **Low-Latency Pipeline** | End-to-end response in ~2-3 seconds |
+
+---
+
+### 🖥️ Module 4 — Frontend UI & User Experience
+
+> *Single-page application delivering a polished, responsive interface for all features.*
+
+| # | Functionality | Description |
+|:-:|---------------|-------------|
+| 1 | **Landing Page** | URL input field with recent history cards for quick access |
+| 2 | **Processing Screen** | Real-time progress indicators streamed via SSE |
+| 3 | **Tabbed Dashboard** | Switchable tabs — Summary, Chapters, Concepts, Mind Map, Notes |
+| 4 | **Chat Interface** | Interactive AI chat with styled message bubbles |
+| 5 | **Theme Toggle** | Dark / Light mode with smooth CSS variable transitions |
+| 6 | **PDF Export** | Export any content tab as a formatted PDF via html2pdf.js |
+| 7 | **Markdown Rendering** | Render AI-generated Markdown content via marked.js |
+| 8 | **Responsive Layout** | Adaptive design for desktop and tablet viewports |
+| 9 | **Animations** | Smooth transitions, loading skeletons, and micro-interactions |
+| 10 | **View Navigation** | Seamless flow: Landing → Processing → Dashboard → Watch |
+
+---
+
+### ▶️ Module 5 — Watch View & Synced Transcript Playback
+
+> *Immersive video watching experience with live transcript sync and persistent progress tracking.*
+
+| # | Functionality | Description |
+|:-:|---------------|-------------|
+| 1 | **YouTube Player** | Embedded YouTube IFrame player integration |
+| 2 | **Live Transcript Sync** | Highlight active transcript segment in real-time (500ms polling) |
+| 3 | **Auto-Scroll** | Transcript auto-scrolls to follow current playback position |
+| 4 | **Click-to-Seek** | Click any transcript segment to jump to that point in the video |
+| 5 | **Progress Bar** | Real-time watch progress indicator (percentage watched) |
+| 6 | **Progress Persistence** | Save watch progress to localStorage every 5 seconds |
+| 7 | **History Tracking** | Record title, channel, thumbnail, and timestamp per video |
+| 8 | **History Panel** | Clickable history cards to reload and resume past videos |
+| 9 | **LRU Management** | Maintain max 50 entries, newest first |
+| 10 | **Recent Cards** | Display last 6 watched videos on the landing page |
+
+---
+
+### ⚙️ Module 6 — API Layer & Backend Infrastructure
+
+> *The backbone — routing, streaming, validation, and deployment configuration.*
+
+| # | Functionality | Description |
+|:-:|---------------|-------------|
+| 1 | **FastAPI Routes** | RESTful API design with clean route separation |
+| 2 | **SSE Streaming** | Server-Sent Events for all long-running operations |
+| 3 | **Pydantic Validation** | Request/response models with strict type checking |
+| 4 | **In-Memory Cache** | Processed video data stored in memory for fast retrieval |
+| 5 | **CORS Config** | Cross-origin access configuration for frontend requests |
+| 6 | **Template Serving** | Static files and HTML templates via Jinja2 |
+| 7 | **Env Management** | Secure API key loading via dotenv (.env file) |
+| 8 | **Render Deployment** | One-click deploy config via render.yaml |
+| 9 | **ASGI Server** | Uvicorn with hot-reload for development |
+| 10 | **Error Handling** | Structured error responses and graceful exception management |
 
 ---
 
