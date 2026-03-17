@@ -1307,6 +1307,218 @@
             color: var(--accent);
             font-weight: 500;
         }
+        /* ══════ FLASHCARDS ══════ */
+        .flashcards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+            padding: 16px;
+        }
+        .flashcard {
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-height: 140px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+        .flashcard:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px var(--accent-glow);
+        }
+        .flashcard-q {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+            line-height: 1.5;
+        }
+        .flashcard-q::before {
+            content: 'Q';
+            display: inline-block;
+            background: var(--accent);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 2px 7px;
+            border-radius: 6px;
+            margin-right: 8px;
+        }
+        .flashcard-a {
+            font-size: 13px;
+            color: var(--text2);
+            line-height: 1.6;
+            border-top: 1px solid var(--border);
+            padding-top: 12px;
+            display: none;
+        }
+        .flashcard-a::before {
+            content: 'A';
+            display: inline-block;
+            background: var(--green);
+            color: #000;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 2px 7px;
+            border-radius: 6px;
+            margin-right: 8px;
+        }
+        .flashcard.revealed .flashcard-a {
+            display: block;
+        }
+        .flashcard-hint {
+            font-size: 11px;
+            color: var(--text3);
+            text-align: center;
+            margin-top: auto;
+        }
+        .flashcard.revealed .flashcard-hint {
+            display: none;
+        }
+        .flashcards-counter {
+            text-align: center;
+            font-size: 13px;
+            color: var(--text3);
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+        .flashcards-counter span {
+            color: var(--accent);
+            font-weight: 700;
+        }
+        /* ══════ QUIZ ══════ */
+        #quizContainer {
+            padding: 24px;
+        }
+        .quiz-counter {
+            font-size: 12px;
+            color: var(--text3);
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .quiz-score-display {
+            font-size: 13px;
+            color: var(--text2);
+            margin-bottom: 16px;
+        }
+        .quiz-score-display span {
+            color: var(--accent);
+            font-weight: 700;
+        }
+        .quiz-question {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text);
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .quiz-option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: var(--bg3);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            color: var(--text);
+            font-size: 14px;
+            cursor: pointer;
+            text-align: left;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+        .quiz-option:hover:not(:disabled) {
+            border-color: var(--accent);
+            background: var(--accent-light);
+        }
+        .quiz-option.correct {
+            border-color: var(--green);
+            background: var(--green-bg);
+            color: var(--green);
+        }
+        .quiz-option.wrong {
+            border-color: var(--red);
+            background: rgba(248,113,113,0.1);
+            color: var(--red);
+        }
+        .quiz-option.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .quiz-letter {
+            background: var(--accent);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 2px 7px;
+            border-radius: 6px;
+            flex-shrink: 0;
+        }
+        .quiz-feedback {
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        .correct-fb { background: var(--green-bg); color: var(--green); }
+        .wrong-fb { background: rgba(248,113,113,0.1); color: var(--red); }
+        .quiz-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+        }
+        .quiz-nav-btn {
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+        .quiz-nav-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .quiz-nav-btn.finish {
+            background: linear-gradient(135deg, var(--accent), #ec4899);
+            color: #fff;
+            border: none;
+        }
+        .quiz-result {
+            text-align: center;
+            padding: 32px 16px;
+        }
+        .quiz-result-emoji { font-size: 64px; margin-bottom: 16px; }
+        .quiz-result-score {
+            font-size: 48px;
+            font-weight: 900;
+            color: var(--accent);
+            line-height: 1;
+        }
+        .quiz-result-pct {
+            font-size: 20px;
+            color: var(--text2);
+            margin: 8px 0 4px;
+        }
+        .quiz-result-msg {
+            font-size: 16px;
+            color: var(--text2);
+            margin-bottom: 24px;
+        }
 
         @media (max-width: 900px) {
             .watch-body { grid-template-columns: 1fr; }
@@ -1465,6 +1677,8 @@
                 <button class="tab-btn" onclick="switchTab('left', 'concepts', this)">Key Concepts</button>
                 <button class="tab-btn" onclick="switchTab('left', 'mindmap', this)">Mind Map</button>
                 <button class="tab-btn" onclick="switchTab('left', 'notes', this)">Notes</button>
+                <button class="tab-btn" onclick="switchTab('left', 'flashcards', this)">Flashcards</button>
+                <button class="tab-btn" onclick="switchTab('left', 'quiz', this)">Quiz</button>
             </div>
             <div class="toolbar">
                 <button class="tool-btn" onclick="copyContent('left')">Copy</button>
@@ -1587,7 +1801,7 @@
 let currentVideoId = null;
 let currentLeftTab = 'summary';
 let contentCache = {
-    summary: '', chapters: '', concepts: '', mindmap: '', notes: '', transcript: ''
+    summary: '', chapters: '', concepts: '', mindmap: '', notes: '', flashcards: '', quiz: '', transcript: ''
 };
 let rawContentCache = { ...contentCache };
 
@@ -1862,9 +2076,15 @@ async function loadFeature(feature, style) {
                     eventType = line.slice(7).trim();
                 } else if (line.startsWith('data: ')) {
                     const data = JSON.parse(line.slice(6));
-                    if (eventType === 'result') {
+                   if (eventType === 'result') {
                         rawContentCache[feature] = data.text;
-                        contentCache[feature] = renderMarkdown(data.text);
+                        if (feature === 'flashcards') {
+                            contentCache[feature] = renderFlashcards(data.text);
+                        } else if (feature === 'quiz') {
+                            contentCache[feature] = renderQuiz(data.text);
+                        } else {
+                            contentCache[feature] = renderMarkdown(data.text);
+                        }
                         if (currentLeftTab === feature) {
                             document.getElementById('leftContent').innerHTML = contentCache[feature];
                         }
@@ -1877,6 +2097,151 @@ async function loadFeature(feature, style) {
     } catch (err) {
         document.getElementById('leftContent').innerHTML = `<div class="placeholder">${err.message}</div>`;
     }
+}
+// ─── Render Flashcards ───────────────────────────────────────────────────────
+function renderFlashcards(text) {
+    const cards = [];
+     const blocks = text.split(/\n(?=Q:)/).map(b => b.trim()).filter(Boolean);
+
+    for (const block of blocks) {
+        const qMatch = block.match(/Q:\s*(.+?)(?=\nA:|$)/s);
+        const aMatch = block.match(/A:\s*(.+?)$/s);
+        if (qMatch && aMatch) {
+            cards.push({ q: qMatch[1].trim(), a: aMatch[1].trim() });
+        }
+    }
+
+    if (!cards.length) {
+        return `<div class="placeholder">Could not parse flashcards. Try regenerating.</div>`;
+    }
+
+    const counter = `<div class="flashcards-counter">
+        <span>${cards.length}</span> flashcards — click any card to reveal the answer
+    </div>`;
+
+    const grid = `<div class="flashcards-grid">` +
+        cards.map(card => `
+            <div class="flashcard" onclick="this.classList.toggle('revealed')">
+                <div class="flashcard-q">${escapeHtml(card.q)}</div>
+                <div class="flashcard-a">${escapeHtml(card.a)}</div>
+                <div class="flashcard-hint">👆 Click to reveal answer</div>
+            </div>
+        `).join('') +
+        `</div>`;
+
+    return counter + grid;
+}
+// ─── Render Quiz ─────────────────────────────────────────────────────────────
+function renderQuiz(text) {
+    const questions = [];
+    const blocks = text.split('---').map(b => b.trim()).filter(Boolean);
+
+    for (const block of blocks) {
+        const qMatch = block.match(/Q:\s*(.+?)(?=\nA\))/s);
+        const aMatch = block.match(/A\)\s*(.+?)(?=\nB\))/s);
+        const bMatch = block.match(/B\)\s*(.+?)(?=\nC\))/s);
+        const cMatch = block.match(/C\)\s*(.+?)(?=\nD\))/s);
+        const dMatch = block.match(/D\)\s*(.+?)(?=\nANSWER:)/s);
+        const ansMatch = block.match(/ANSWER:\s*([ABCD])/);
+
+        if (qMatch && aMatch && bMatch && cMatch && dMatch && ansMatch) {
+            questions.push({
+                q: qMatch[1].trim(),
+                options: {
+                    A: aMatch[1].trim(),
+                    B: bMatch[1].trim(),
+                    C: cMatch[1].trim(),
+                    D: dMatch[1].trim(),
+                },
+                answer: ansMatch[1].trim()
+            });
+        }
+    }
+
+    if (!questions.length) {
+        return `<div class="placeholder">Could not parse quiz. Try regenerating.</div>`;
+    }
+
+    let currentQ = 0;
+    let score = 0;
+    let answered = new Array(questions.length).fill(null);
+
+    function renderQuestion(index) {
+        const q = questions[index];
+        const isAnswered = answered[index] !== null;
+        const optionsHtml = ['A', 'B', 'C', 'D'].map(letter => {
+            let cls = 'quiz-option';
+            if (isAnswered) {
+                if (letter === q.answer) cls += ' correct';
+                else if (letter === answered[index]) cls += ' wrong';
+                else cls += ' disabled';
+            }
+            return `<button class="${cls}" onclick="quizAnswer(${index}, '${letter}')"
+                ${isAnswered ? 'disabled' : ''}>
+                <span class="quiz-letter">${letter}</span>
+                ${escapeHtml(q.options[letter])}
+            </button>`;
+        }).join('');
+
+        const feedback = isAnswered
+            ? answered[index] === q.answer
+                ? `<div class="quiz-feedback correct-fb">✅ Correct!</div>`
+                : `<div class="quiz-feedback wrong-fb">❌ Wrong! Answer was ${q.answer}</div>`
+            : '';
+
+        return `
+            <div class="quiz-counter">${index + 1} / ${questions.length}</div>
+            <div class="quiz-score-display">Score: <span>${score}</span> / ${questions.length}</div>
+            <div class="quiz-question">${escapeHtml(q.q)}</div>
+            <div class="quiz-options">${optionsHtml}</div>
+            ${feedback}
+            <div class="quiz-nav">
+                ${index > 0 ? `<button class="quiz-nav-btn" onclick="quizNav(${index - 1})">← Prev</button>` : '<span></span>'}
+                ${index < questions.length - 1
+                    ? `<button class="quiz-nav-btn" onclick="quizNav(${index + 1})">Next →</button>`
+                    : `<button class="quiz-nav-btn finish" onclick="quizFinish()">Finish 🎉</button>`}
+            </div>`;
+    }
+
+    function quizAnswer(index, letter) {
+        if (answered[index] !== null) return;
+        answered[index] = letter;
+        if (letter === questions[index].answer) score++;
+        document.getElementById('quizContainer').innerHTML = renderQuestion(index);
+        window._quizRender = renderQuestion;
+        window._quizNav = quizNav;
+        window._quizAnswer = quizAnswer;
+        window._quizFinish = quizFinish;
+    }
+
+    function quizNav(index) {
+        currentQ = index;
+        document.getElementById('quizContainer').innerHTML = renderQuestion(index);
+    }
+
+    function quizFinish() {
+        const pct = Math.round((score / questions.length) * 100);
+        const emoji = pct >= 80 ? '🎉' : pct >= 50 ? '😊' : '😅';
+        document.getElementById('quizContainer').innerHTML = `
+            <div class="quiz-result">
+                <div class="quiz-result-emoji">${emoji}</div>
+                <div class="quiz-result-score">${score} / ${questions.length}</div>
+                <div class="quiz-result-pct">${pct}%</div>
+                <div class="quiz-result-msg">${pct >= 80 ? 'Excellent!' : pct >= 50 ? 'Good job!' : 'Keep practicing!'}</div>
+                <button class="quiz-nav-btn finish" onclick="quizRetry()">Retry Quiz 🔄</button>
+            </div>`;
+    }
+
+    window.quizAnswer = quizAnswer;
+    window.quizNav = quizNav;
+    window.quizFinish = quizFinish;
+    window.quizRetry = () => {
+        score = 0;
+        answered = new Array(questions.length).fill(null);
+        document.getElementById('quizContainer').innerHTML = renderQuestion(0);
+    };
+
+    return `<div id="quizContainer">${renderQuestion(0)}</div>`;
 }
 
 function regenerateFeature() {

@@ -160,7 +160,7 @@ def smart_transcribe(url: str, video_id: str, progress_callback=None) -> tuple[s
         progress_callback("transcript_yt", "Fetching YouTube transcript...")
     transcript, timestamped, raw_segments = get_youtube_transcript(video_id)
     if transcript:
-        return transcript, timestamped, "youtube_native", raw_segments or []
+        return transcript or "", timestamped or "", "youtube_native", raw_segments or []
 
     raise RuntimeError("No transcript available for this video. The video may not have subtitles/captions enabled.")
 
@@ -279,6 +279,50 @@ Format in Markdown with:
 6. **Quick Revision** — 5-6 bullet points for quick review
 
 Make notes concise, well-organized, and easy to study from.
+{transcript}"""
+    resp = llm.invoke(prompt)
+    return resp.content
+
+def generate_flashcards(transcript: str) -> str:
+    """Generate Q&A flashcards from the transcript."""
+    prompt = f"""Create 15 flashcards from this video transcript for studying.
+Format EXACTLY like this for each card:
+
+Q: [question here]
+A: [answer here]
+
+---
+
+Rules:
+- Questions should test understanding of key facts and concepts
+- Answers should be short, 1-2 sentences max
+- Cover the most important ideas from the video
+- Do not number the cards
+
+{transcript}"""
+    resp = llm.invoke(prompt)
+    return resp.content
+
+def generate_quiz(transcript: str) -> str:
+    """Generate MCQ quiz questions from the transcript."""
+    prompt = f"""Create 10 multiple choice questions from this video transcript.
+Format EXACTLY like this for each question:
+
+Q: [question here]
+A) [option A]
+B) [option B]
+C) [option C]
+D) [option D]
+ANSWER: [correct letter, e.g. B]
+
+---
+
+Rules:
+- Questions should test understanding of key facts
+- Only one correct answer per question
+- Keep options concise
+- Cover different parts of the video
+- Do not number the questions
 
 {transcript}"""
     resp = llm.invoke(prompt)
@@ -484,6 +528,10 @@ async def feature(req: FeatureRequest):
                 result = await asyncio.to_thread(generate_mindmap, transcript)
             elif req.feature == "notes":
                 result = await asyncio.to_thread(generate_notes, transcript)
+            elif req.feature == "flashcards":
+                result = await asyncio.to_thread(generate_flashcards, transcript) 
+            elif req.feature == "quiz":
+                result = await asyncio.to_thread(generate_quiz, transcript)       
             else:
                 result = "Unknown feature requested."
 
@@ -498,4 +546,4 @@ async def feature(req: FeatureRequest):
 # ─── Run ──────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
