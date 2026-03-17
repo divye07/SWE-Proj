@@ -770,6 +770,8 @@ python main.py
 ## 👨‍💻 Author
 
 **Divye** — [GitHub](https://github.com/divye07)
+**Sachin** — [GitHub](https://github.com/sachinvv552)
+**Devang** — [GitHub](https://github.com/Devang0124)
 
 ---
 
