@@ -767,7 +767,7 @@ python main.py
 
 ---
 
-## 👨‍💻 Author
+## 👨‍💻 Authors
 
 **Divye** — [GitHub](https://github.com/divye07)
 **Sachin** — [GitHub](https://github.com/sachinvv552)
